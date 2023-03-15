@@ -13,7 +13,7 @@ public class MessageReceivedListener {
 
     private final MailSenderService mailSenderService;
 
-    @KafkaListener(topics = "messageReceived" )
+    @KafkaListener(topics = "messageReceived")
     public void messageReceived(ReceivedMessage receivedMessage) {
         try {
             mailSenderService.sendEmail(receivedMessage);

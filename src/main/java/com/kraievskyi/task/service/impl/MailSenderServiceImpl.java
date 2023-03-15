@@ -2,16 +2,15 @@ package com.kraievskyi.task.service.impl;
 
 import com.kraievskyi.task.dto.MessageRequestDto;
 import com.kraievskyi.task.dto.MessageResponseDto;
-import com.kraievskyi.task.model.Message;
-import com.kraievskyi.task.service.mapper.MessageMapper;
 import com.kraievskyi.task.messaging.ReceivedMessage;
+import com.kraievskyi.task.model.Message;
 import com.kraievskyi.task.repository.MessageRepository;
 import com.kraievskyi.task.service.MailSenderService;
+import com.kraievskyi.task.service.mapper.MessageMapper;
+import java.util.List;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class MailSenderServiceImpl implements MailSenderService {
@@ -21,7 +20,9 @@ public class MailSenderServiceImpl implements MailSenderService {
 
     private final JavaMailSender javaMailSender;
 
-    public MailSenderServiceImpl(MessageRepository messageRepository, MessageMapper mapper, JavaMailSender javaMailSender) {
+    public MailSenderServiceImpl(MessageRepository messageRepository,
+                                 MessageMapper mapper,
+                                 JavaMailSender javaMailSender) {
         this.messageRepository = messageRepository;
         this.mapper = mapper;
         this.javaMailSender = javaMailSender;
@@ -30,11 +31,6 @@ public class MailSenderServiceImpl implements MailSenderService {
     @Override
     public MessageResponseDto save(MessageRequestDto message) {
         return mapper.toMessageResponseDto(messageRepository.save(mapper.toModel(message)));
-    }
-
-    @Override
-    public MessageResponseDto getById(String id) {
-        return mapper.toMessageResponseDto(messageRepository.findById(id).orElseThrow());
     }
 
     @Override
@@ -54,10 +50,5 @@ public class MailSenderServiceImpl implements MailSenderService {
         javaMailSender.send(message);
         byId.setEmailStatus("SENT");
         messageRepository.save(byId);
-    }
-
-    @Override
-    public void delete(String id) {
-        messageRepository.deleteById(id);
     }
 }

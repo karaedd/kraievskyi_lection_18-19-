@@ -4,15 +4,14 @@ import com.kraievskyi.task.dto.MessageRequestDto;
 import com.kraievskyi.task.dto.MessageResponseDto;
 import com.kraievskyi.task.dto.ReceivedMessageDto;
 import com.kraievskyi.task.messaging.ReceivedMessage;
-import com.kraievskyi.task.model.Message;
 import com.kraievskyi.task.service.MailSenderService;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaOperations;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,8 +25,6 @@ public class MessageController {
 
     @PostMapping("/mailConfirmation")
     public void receiveMessage(@RequestBody ReceivedMessageDto dto) {
-        // As a message key we use orderId, so all messages related to
-        // one Order will be routed to one topic partition and processed sequentially
         kafkaOperations.send(receivedTopic, toMessage(dto));
     }
 
@@ -38,24 +35,9 @@ public class MessageController {
                 .build();
     }
 
-    //for tests
-    @GetMapping("/{id}")
-    public MessageResponseDto getMessage(@PathVariable String id) {
-        return mailSenderService.getById(id);
-    }
-
     @PostMapping("/message")
     public MessageResponseDto createMessage(@RequestBody MessageRequestDto dto) {
         return mailSenderService.save(dto);
     }
 
-    @GetMapping("/all")
-    public List<Message> getAll() {
-        return mailSenderService.findAllByEmailStatusUnsent();
-    }
-
-    @DeleteMapping("/{id}")
-    public void deleteById(@PathVariable String id) {
-        mailSenderService.delete(id);
-    }
 }

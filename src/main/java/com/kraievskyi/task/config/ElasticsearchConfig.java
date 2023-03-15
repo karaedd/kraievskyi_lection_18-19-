@@ -6,7 +6,6 @@ import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 
-
 @EnableElasticsearchRepositories(basePackages = "com.kraievskyi.task.repository")
 @Configuration
 public class ElasticsearchConfig extends ElasticsearchConfiguration {
