@@ -1,10 +1,26 @@
-version: "3"
+version: "3.9"
+
 services:
+  elasticsearch:
+    image: elasticsearch:8.6.1
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - xpack.security.enabled=false
+    networks:
+      - service
+    volumes:
+      - ./db_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
   zookeeper:
     image: 'bitnami/zookeeper:latest'
     container_name: zookeeper
     ports:
       - '2181:2181'
+    networks:
+      - service
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
   kafka:
@@ -15,47 +31,31 @@ services:
     environment:
       - KAFKA_BROKER_ID=1
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
+    networks:
+      - service
     depends_on:
       - zookeeper
-
-  elasticsearch:
-    image: elasticsearch:8.6.2
-    container_name: elasticsearch
-    environment:
-      - discovery.type=single-node
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
-      - xpack.security.enabled=false
-    volumes:
-      - ./data:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
-    healthcheck:
-      test: curl -s http://elasticsearch01:9200 >/dev/null || exit 1
-      interval: 30s
-      timeout: 10s
-      retries: 50
-
-  app:
+  email_service:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        - VERSION_ID=3
-    container_name: app
+    container_name: email_service
     ports:
       - "8080:8080"
-    env_file: .env
+    env_file:
+      - environment.env
     environment:
-      - MAIL_HOST=$MAIL_HOST
-      - MAIL_PORT=$MAIL_PORT
-      - MAIL_USERNAME=$MAIL_USERNAME
-      - MAIL_PASSWORD=$MAIL_PASSWORD
-      - MAIL_PROPERTIES_MAIL_SMTP_AUTH=$MAIL_PROPERTIES_MAIL_SMTP_AUTH
-      - MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=$MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE
+      - spring.kafka.bootstrap-servers=kafka:9092
+      - elasticsearch.address=elasticsearch:9200
     depends_on:
-      - kafka
       - elasticsearch
-
+      - kafka
+    networks:
+      - service
+networks:
+  service:
+    name: service-network
+    driver: bridge
